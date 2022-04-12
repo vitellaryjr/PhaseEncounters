@@ -167,13 +167,13 @@ function PhaseEncounter:randomWavesForPhase(waves, index)
     end
 end
 
-function PhaseEncounter:incrementPhase()
-    self.current_phase = self.current_phase + 1
+function PhaseEncounter:incrementPhase(amt)
+    self.current_phase = self.current_phase + (amt or 1)
     self.current_phase_turn = 1
 end
 
-function PhaseEncounter:incrementPhaseTurn()
-    self.current_phase_turn = self.current_phase_turn + 1
+function PhaseEncounter:incrementPhaseTurn(amt)
+    self.current_phase_turn = self.current_phase_turn + (amt or 1)
 end
 
 return PhaseEncounter
