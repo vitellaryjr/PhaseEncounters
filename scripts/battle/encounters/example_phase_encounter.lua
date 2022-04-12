@@ -6,6 +6,7 @@ function Example:init()
     local dummy1 = self:addEnemy("dummy")
     local dummy2 = self:addEnemy("dummy")
 
+    -- defines the first phase of the battle
     self:addPhase({
         {
             dialogue = {
@@ -24,7 +25,8 @@ function Example:init()
             },
         }
     })
-    self:randomDialogueForPhase(1, {
+    -- random dialogue to be played after all turns in phase 1 have occurred
+    self:randomDialogueForPhase({
         {
             ["dummy:1"] = {"hi!!"},
         },
@@ -33,6 +35,7 @@ function Example:init()
         },
     })
 
+    -- defines the second phase of the battle
     self:addPhase({
         {
             dialogue = {
@@ -42,7 +45,8 @@ function Example:init()
             wave = "basic2",
         }
     })
-    self:randomWavesForPhase(2, {
+    -- random waves to be used after all turns in phase 2 have occurred
+    self:randomWavesForPhase({
         "basic",
         "basic2",
     })

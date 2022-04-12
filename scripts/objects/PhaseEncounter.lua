@@ -152,11 +152,13 @@ function PhaseEncounter:addTurnToPhase(turn, phase_index, turn_index)
     table.insert(self.phases[index], turn_index or #phase + 1, turn)
 end
 
-function PhaseEncounter:randomDialogueForPhase(index, dialogue)
+function PhaseEncounter:randomDialogueForPhase(dialogue, index)
+    index = index or #self.phases
     self.random_dialogue[index] = Utils.merge(self.random_dialogue[index] or {}, dialogue)
 end
 
-function PhaseEncounter:randomWavesForPhase(index, waves)
+function PhaseEncounter:randomWavesForPhase(waves, index)
+    index = index or #self.phases
     if type(waves) == "string" then
         self.random_waves[index] = self.random_waves[index] or {}
         table.insert(self.random_waves[index], waves)
