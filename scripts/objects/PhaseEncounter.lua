@@ -143,7 +143,11 @@ end
 
 function PhaseEncounter:addPhase(turns, index)
     index = index or #self.phases + 1
-    table.insert(self.phases, index, turns)
+    if type(index) == "number" then
+        table.insert(self.phases, index, turns)
+    else
+        self.phases[index] = turns
+    end
 end
 
 function PhaseEncounter:addTurnToPhase(turn, phase_index, turn_index)
@@ -172,8 +176,17 @@ function PhaseEncounter:incrementPhase(amt)
     self.current_phase_turn = 1
 end
 
+function PhaseEncounter:setPhase(index)
+    self.current_phase = index
+    self.current_phase_turn = 1
+end
+
 function PhaseEncounter:incrementPhaseTurn(amt)
     self.current_phase_turn = self.current_phase_turn + (amt or 1)
+end
+
+function PhaseEncounter:setPhaseTurn(index)
+    self.current_phase_turn = index
 end
 
 return PhaseEncounter
