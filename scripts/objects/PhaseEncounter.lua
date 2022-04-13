@@ -209,6 +209,10 @@ function PhaseEncounter:randomTextForPhase(text, index)
     end
 end
 
+function PhaseEncounter:setDialogueOverride(dialogue)
+    self.dialogue_override = dialogue
+end
+
 function PhaseEncounter:incrementPhase(amt)
     self.current_phase = self.current_phase + (amt or 1)
     self.current_phase_turn = 1
