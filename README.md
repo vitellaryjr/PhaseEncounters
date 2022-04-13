@@ -45,4 +45,5 @@ each of these fields can be defined in numerous different ways. the following se
 
 `wave` can be defined as either a string or a table
 * if `wave` is a string, it will be used as the wave ID to be selected
-* if `wave` is a table, it can define the fields `wave` and `enemy`: `wave` will be the wave ID to be used, and `enemy` is either an enemy ID or an enemy instance which will be used to get which enemy the wave should be associated with (used by bullets to determine how much damage to deal). if `enemy` is not defined for a wave, then a random active enemy will be selected
+* if `wave` is a table of strings, it will randomly select a string to be used as the wave ID
+* if `wave` is a table with string indexes, it can define the fields `wave` and `enemy`: `wave` will be the wave ID or a table of random wave IDs to be used, and `enemy` is either an enemy ID or an enemy instance which will be used to get which enemy the wave should be associated with (used by bullets to determine how much damage to deal). if `enemy` is not defined for a wave, then a random active enemy will be selected

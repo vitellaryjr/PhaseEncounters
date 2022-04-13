@@ -126,33 +126,40 @@ function PhaseEncounter:getWaveFromData(wave_data)
     if type(wave_data) == "string" then
         return wave_data, Utils.pick(Game.battle:getActiveEnemies())
     else
-        local wave = wave_data.wave
-        local enemy_id = wave_data.enemy
-        if enemy_id then
-            if isClass(enemy_id) then
-                return wave, enemy_id
-            else
-                if string.find(enemy_id, ":") then
-                    local enemy_id, index = unpack(Utils.split(enemy_id, ":"))
-                    local i = 1
-                    for _,enemy in ipairs(Game.battle:getActiveEnemies()) do
-                        if enemy.id == enemy_id then
-                            if i == tonumber(index) then
+        if #wave_data > 0 then
+            return Utils.pick(wave_data), Utils.pick(Game.battle:getActiveEnemies())
+        else
+            local wave = wave_data.wave
+            if wave and type(wave) == "table" then
+                wave = Utils.pick(wave)
+            end
+            local enemy_id = wave_data.enemy
+            if enemy_id then
+                if isClass(enemy_id) then
+                    return wave, enemy_id
+                else
+                    if string.find(enemy_id, ":") then
+                        local enemy_id, index = unpack(Utils.split(enemy_id, ":"))
+                        local i = 1
+                        for _,enemy in ipairs(Game.battle:getActiveEnemies()) do
+                            if enemy.id == enemy_id then
+                                if i == tonumber(index) then
+                                    return wave, enemy
+                                end
+                                i = i + 1
+                            end
+                        end
+                    else
+                        for _,enemy in ipairs(Game.battle:getActiveEnemies()) do
+                            if enemy.id == enemy_id then
                                 return wave, enemy
                             end
-                            i = i + 1
-                        end
-                    end
-                else
-                    for _,enemy in ipairs(Game.battle:getActiveEnemies()) do
-                        if enemy.id == enemy_id then
-                            return wave, enemy
                         end
                     end
                 end
+            else
+                return wave, Utils.pick(Game.battle:getActiveEnemies())
             end
-        else
-            return wave, Utils.pick(Game.battle:getActiveEnemies())
         end
     end
 end
