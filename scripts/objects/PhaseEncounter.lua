@@ -18,19 +18,7 @@ end
 
 function PhaseEncounter:getDialogueCutscene()
     if self.dialogue_override then
-        local dialogue_data = self.dialogue_override
-        local dialogue
-        if type(dialogue_data) == "string" then
-            dialogue = {[Game.battle:getActiveEnemies()[1]] = {dialogue_data}}
-        elseif type(dialogue_data) == "function" then
-            dialogue = dialogue_data
-        else
-            if #dialogue_data > 0 then
-                dialogue = {[Game.battle:getActiveEnemies()[1]] = dialogue_data}
-            else
-                dialogue = dialogue_data
-            end
-        end
+        local dialogue = self:getDialogueFromData(self.dialogue_override)
         self.dialogue_override = nil
         return "phase_dialogue", dialogue
     elseif self.current_phase_turn <= #self.phases[self.current_phase] then
