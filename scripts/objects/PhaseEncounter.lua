@@ -57,7 +57,6 @@ function PhaseEncounter:getEncounterText()
         end
     else
         local text = Utils.pick(self.random_text[self.current_phase] or {})
-        print(Utils.dump(text))
         if text then
             return text
         end
