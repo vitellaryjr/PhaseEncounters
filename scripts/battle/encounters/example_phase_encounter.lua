@@ -23,6 +23,7 @@ function Example:init()
                 wave = "basic",
                 enemy = "dummy:1",
             },
+            text = "* The dummies are happy to see you!",
         }
     })
     -- random dialogue to be played after all turns in phase 1 have occurred
@@ -43,12 +44,17 @@ function Example:init()
                 [dummy2] = "you fucked up",
             },
             wave = "basic2",
+            text = "* The dummies are PISSED",
         }
     })
     -- random waves to be used after all turns in phase 2 have occurred
     self:randomWavesForPhase({
         "basic",
         "basic2",
+    })
+    self:randomTextForPhase({
+        "* The dummies are PISSED",
+        "* you fucked up big time",
     })
 end
 

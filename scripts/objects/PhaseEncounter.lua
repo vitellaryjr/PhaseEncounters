@@ -9,6 +9,7 @@ function PhaseEncounter:init()
 
     self.random_dialogue = {}
     self.random_waves = {}
+    self.random_text = {}
 end
 
 function PhaseEncounter:onTurnEnd()
@@ -58,6 +59,22 @@ function PhaseEncounter:getNextWaves()
         enemy.selected_wave = wave
         return {wave}
     end
+end
+
+function PhaseEncounter:getEncounterText()
+    if self.current_phase_turn <= #self.phases[self.current_phase] then
+        local text = self.phases[self.current_phase][self.current_phase_turn].text
+        if text then
+            return text
+        end
+    else
+        local text = Utils.pick(self.random_text[self.current_phase] or {})
+        print(Utils.dump(text))
+        if text then
+            return text
+        end
+    end
+    return super:getEncounterText(self)
 end
 
 function PhaseEncounter:getDialogueFromData(dialogue_data)
@@ -186,11 +203,21 @@ end
 
 function PhaseEncounter:randomWavesForPhase(waves, index)
     index = index or #self.phases
+    self.random_waves[index] = self.random_waves[index] or {}
     if type(waves) == "string" then
-        self.random_waves[index] = self.random_waves[index] or {}
         table.insert(self.random_waves[index], waves)
     else
-        self.random_waves[index] = Utils.merge(self.random_waves[index] or {}, waves)
+        self.random_waves[index] = Utils.merge(self.random_waves[index], waves)
+    end
+end
+
+function PhaseEncounter:randomTextForPhase(text, index)
+    index = index or #self.phases
+    self.random_text[index] = self.random_text[index] or {}
+    if type(text) == "string" then
+        table.insert(self.random_text[index], text)
+    else
+        self.random_text[index] = Utils.merge(self.random_text[index], text)
     end
 end
 
