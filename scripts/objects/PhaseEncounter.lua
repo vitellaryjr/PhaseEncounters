@@ -17,17 +17,20 @@ function PhaseEncounter:onTurnEnd()
 end
 
 function PhaseEncounter:getDialogueCutscene()
+    local dialogue
     if self.dialogue_override then
-        local dialogue = self:getDialogueFromData(self.dialogue_override)
+        dialogue = self:getDialogueFromData(self.dialogue_override)
         self.dialogue_override = nil
-        return "phase_dialogue", dialogue
     elseif self.current_phase_turn <= #self.phases[self.current_phase] then
         local dialogue_data = self.phases[self.current_phase][self.current_phase_turn].dialogue
-        local dialogue = self:getDialogueFromData(dialogue_data)
-        return "phase_dialogue", dialogue
+        dialogue = self:getDialogueFromData(dialogue_data)
     else
         local dialogue_data = Utils.pick(self.random_dialogue[self.current_phase] or {})
-        local dialogue = self:getDialogueFromData(dialogue_data)
+        dialogue = self:getDialogueFromData(dialogue_data)
+    end
+    if type(dialogue) == "string" or type(dialogue) == "function" then
+        return dialogue
+    else
         return "phase_dialogue", dialogue
     end
 end
@@ -65,38 +68,49 @@ function PhaseEncounter:getEncounterText()
 end
 
 function PhaseEncounter:getDialogueFromData(dialogue_data)
-    local dialogue
     local enemies = Game.battle:getActiveEnemies()
     if type(dialogue_data) == "function" then
-        dialogue = dialogue_data
-    elseif type(dialogue_data) == "table" then
-        if #dialogue_data > 0 then
-            dialogue = {
-                [enemies[1]] = dialogue_data
-            }
-        else
-            dialogue = {}
-            for enemy_id, text in pairs(dialogue_data) do
-                if isClass(enemy_id) then
-                    dialogue[enemy_id] = text
-                else
-                    if string.find(enemy_id, ":") then
-                        local enemy_id, index = unpack(Utils.split(enemy_id, ":"))
-                        local i = 1
-                        for _,enemy in ipairs(enemies) do
-                            if enemy.id == enemy_id then
-                                if i == tonumber(index) then
+        return dialogue_data
+    else
+        local dialogue
+        if type(dialogue_data) == "string" then
+            local bool, new_dialogue = Utils.startsWith(dialogue_data, "cutscene:")
+            if bool then
+                return new_dialogue
+            else
+                dialogue = {
+                    [enemies[1]] = {dialogue_data}
+                }
+            end
+        elseif type(dialogue_data) == "table" then
+            if #dialogue_data > 0 then
+                dialogue = {
+                    [enemies[1]] = dialogue_data
+                }
+            else
+                dialogue = {}
+                for enemy_id, text in pairs(dialogue_data) do
+                    if isClass(enemy_id) then
+                        dialogue[enemy_id] = text
+                    else
+                        if string.find(enemy_id, ":") then
+                            local enemy_id, index = unpack(Utils.split(enemy_id, ":"))
+                            local i = 1
+                            for _,enemy in ipairs(enemies) do
+                                if enemy.id == enemy_id then
+                                    if i == tonumber(index) then
+                                        dialogue[enemy] = text
+                                        break
+                                    end
+                                    i = i + 1
+                                end
+                            end
+                        else
+                            for _,enemy in ipairs(enemies) do
+                                if enemy.id == enemy_id then
                                     dialogue[enemy] = text
                                     break
                                 end
-                                i = i + 1
-                            end
-                        end
-                    else
-                        for _,enemy in ipairs(enemies) do
-                            if enemy.id == enemy_id then
-                                dialogue[enemy] = text
-                                break
                             end
                         end
                     end
@@ -108,22 +122,8 @@ function PhaseEncounter:getDialogueFromData(dialogue_data)
                 dialogue[i] = {text}
             end
         end
-        for _,enemy in ipairs(enemies) do
-            if not dialogue[enemy] then
-                dialogue[enemy] = {}
-            end
-        end
-    else
-        dialogue = {
-            [enemies[1]] = {dialogue_data}
-        }
-        for _,enemy in ipairs(enemies) do
-            if not dialogue[enemy] then
-                dialogue[enemy] = {}
-            end
-        end
+        return dialogue
     end
-    return dialogue
 end
 
 function PhaseEncounter:getWaveFromData(wave_data)
