@@ -41,7 +41,8 @@ each of these fields can be defined in numerous different ways. the following se
 
 `dialogue` can be defined as a string, a table, or a function
 * if `dialogue` is either a string or a table of strings, then the first active enemy in the encounter will say the defined string(s)  
-* if `dialogue` is a function, then the function will be called like a [battle cutscene](https://github.com/KristalTeam/Kristal/wiki/Cutscenes), taking a cutscene instance as an argument
+* if `dialogue` is a string that starts with `cutscene:`, then the rest of the string will be used as a [battle cutscene](https://github.com/KristalTeam/Kristal/wiki/Cutscenes) ID. if the string is separated by commas, then all substrings after the cutscene ID will be passed into the cutscene as arguments
+* if `dialogue` is a function, then the function will be called like a battle cutscene, taking in a Cutscene instance
 * if `dialogue` is a table with either string or EnemyBattler indexes, then each enemy that has an index will say the defined string or table of strings defined for them. when providing string indexes, the string should refer to an enemy's ID; if you need to specify a particular enemy (eg. the second `dummy` enemy in an encounter), you can type the ID followed by a colon and the index of that type of enemy (eg. `dummy:2`)  
 
 ### Wave

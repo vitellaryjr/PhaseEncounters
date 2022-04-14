@@ -46,7 +46,13 @@ function PhaseEncounter:onTurnEnd()
 end
 
 function PhaseEncounter:getDialogueCutscene()
-    if type(self.next_dialogue) == "string" or type(self.next_dialogue) == "function" then
+    if type(self.next_dialogue) == "string" then
+        if string.find(self.next_dialogue, ",") then
+            return unpack(Utils.split(self.next_dialogue, ","))
+        else
+            return self.next_dialogue
+        end
+    elseif type(self.next_dialogue) == "function" then
         return self.next_dialogue
     elseif self.next_dialogue then
         return "phase_dialogue", self.next_dialogue
