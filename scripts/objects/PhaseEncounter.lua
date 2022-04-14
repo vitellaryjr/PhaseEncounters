@@ -10,6 +10,35 @@ function PhaseEncounter:init()
     self.random_dialogue = {}
     self.random_waves = {}
     self.random_text = {}
+
+    self.next_dialogue = nil
+    self.next_wave = nil
+end
+
+function PhaseEncounter:onTurnStart()
+    if self.current_phase_turn <= #self.phases[self.current_phase] then
+        local wave_data = self.phases[self.current_phase][self.current_phase_turn].wave
+        self.next_wave = self:getWaveFromData(wave_data)
+    else
+        local wave_data = Utils.pick(self.random_waves[self.current_phase] or {})
+        if not wave_data then
+            wave_data = Utils.pick(self.phases[self.current_phase]).wave
+        end
+        self.next_wave = self:getWaveFromData(wave_data)
+    end
+
+    if self.dialogue_override then
+        self.next_dialogue = self:getDialogueFromData(self.dialogue_override)
+        self.dialogue_override = nil
+    elseif self.next_wave.dialogue then
+        self.next_dialogue = self:getDialogueFromData(self.next_wave.dialogue)
+    elseif self.current_phase_turn <= #self.phases[self.current_phase] then
+        local dialogue_data = self.phases[self.current_phase][self.current_phase_turn].dialogue
+        self.next_dialogue = self:getDialogueFromData(dialogue_data)
+    else
+        local dialogue_data = Utils.pick(self.random_dialogue[self.current_phase] or {})
+        self.next_dialogue = self:getDialogueFromData(dialogue_data)
+    end
 end
 
 function PhaseEncounter:onTurnEnd()
@@ -17,39 +46,16 @@ function PhaseEncounter:onTurnEnd()
 end
 
 function PhaseEncounter:getDialogueCutscene()
-    local dialogue
-    if self.dialogue_override then
-        dialogue = self:getDialogueFromData(self.dialogue_override)
-        self.dialogue_override = nil
-    elseif self.current_phase_turn <= #self.phases[self.current_phase] then
-        local dialogue_data = self.phases[self.current_phase][self.current_phase_turn].dialogue
-        dialogue = self:getDialogueFromData(dialogue_data)
-    else
-        local dialogue_data = Utils.pick(self.random_dialogue[self.current_phase] or {})
-        dialogue = self:getDialogueFromData(dialogue_data)
-    end
-    if type(dialogue) == "string" or type(dialogue) == "function" then
-        return dialogue
-    else
-        return "phase_dialogue", dialogue
+    if type(self.next_dialogue) == "string" or type(self.next_dialogue) == "function" then
+        return self.next_dialogue
+    elseif self.next_dialogue then
+        return "phase_dialogue", self.next_dialogue
     end
 end
 
 function PhaseEncounter:getNextWaves()
-    if self.current_phase_turn <= #self.phases[self.current_phase] then
-        local wave_data = self.phases[self.current_phase][self.current_phase_turn].wave
-        local wave, enemy = self:getWaveFromData(wave_data)
-        enemy.selected_wave = wave
-        return {wave}
-    else
-        local wave_data = Utils.pick(self.random_waves[self.current_phase] or {})
-        if not wave_data then
-            wave_data = Utils.pick(self.phases[self.current_phase]).wave
-        end
-        local wave, enemy = self:getWaveFromData(wave_data)
-        enemy.selected_wave = wave
-        return {wave}
-    end
+    self.next_wave.enemy.selected_wave = self.next_wave.wave
+    return {self.next_wave.wave}
 end
 
 function PhaseEncounter:getEncounterText()
@@ -117,9 +123,11 @@ function PhaseEncounter:getDialogueFromData(dialogue_data)
                 end
             end
         end
-        for i,text in pairs(dialogue) do
-            if type(text) == "string" then
-                dialogue[i] = {text}
+        if dialogue then
+            for i,text in pairs(dialogue) do
+                if type(text) == "string" then
+                    dialogue[i] = {text}
+                end
             end
         end
         return dialogue
@@ -128,19 +136,21 @@ end
 
 function PhaseEncounter:getWaveFromData(wave_data)
     if type(wave_data) == "string" then
-        return wave_data, Utils.pick(Game.battle:getActiveEnemies())
+        return {wave = wave_data, enemy = Utils.pick(Game.battle:getActiveEnemies())}
     else
         if #wave_data > 0 then
-            return Utils.pick(wave_data), Utils.pick(Game.battle:getActiveEnemies())
+            return {wave = Utils.pick(wave_data), enemy = Utils.pick(Game.battle:getActiveEnemies())}
         else
-            local wave = wave_data.wave
-            if wave and type(wave) == "table" then
-                wave = Utils.pick(wave)
+            local wave = {}
+            if type(wave_data.wave) == "table" then
+                wave.wave = Utils.pick(wave_data.wave)
+            else
+                wave.wave = wave_data.wave
             end
             local enemy_id = wave_data.enemy
             if enemy_id then
                 if isClass(enemy_id) then
-                    return wave, enemy_id
+                    wave.enemy = enemy_id
                 else
                     if string.find(enemy_id, ":") then
                         local enemy_id, index = unpack(Utils.split(enemy_id, ":"))
@@ -148,7 +158,8 @@ function PhaseEncounter:getWaveFromData(wave_data)
                         for _,enemy in ipairs(Game.battle:getActiveEnemies()) do
                             if enemy.id == enemy_id then
                                 if i == tonumber(index) then
-                                    return wave, enemy
+                                    wave.enemy = enemy
+                                    break
                                 end
                                 i = i + 1
                             end
@@ -156,14 +167,19 @@ function PhaseEncounter:getWaveFromData(wave_data)
                     else
                         for _,enemy in ipairs(Game.battle:getActiveEnemies()) do
                             if enemy.id == enemy_id then
-                                return wave, enemy
+                                wave.enemy = enemy
+                                break
                             end
                         end
                     end
                 end
             else
-                return wave, Utils.pick(Game.battle:getActiveEnemies())
+                wave.enemy = Utils.pick(Game.battle:getActiveEnemies())
             end
+            if wave_data.dialogue then
+                wave.dialogue = wave_data.dialogue
+            end
+            return wave
         end
     end
 end
