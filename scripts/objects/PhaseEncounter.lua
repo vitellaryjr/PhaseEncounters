@@ -179,9 +179,6 @@ function PhaseEncounter:setNextTurnData()
             self.next_wave = self:getWaveFromData(wave_data)
         end
     end
-    if self.wave_override then
-        self.next_wave = self:getWaveFromData(self.wave_override)
-    end
     if not self.next_wave then
         local wave_data = Utils.pick(self.random_waves[self.current_phase] or {})
         if not wave_data then
@@ -190,10 +187,7 @@ function PhaseEncounter:setNextTurnData()
         self.next_wave = self:getWaveFromData(wave_data) or {}
     end
 
-    if self.dialogue_override then
-        self.next_dialogue = self:getDialogueFromData(self.dialogue_override)
-        self.dialogue_override = nil
-    elseif self.next_wave.dialogue then
+    if self.next_wave.dialogue then
         self.next_dialogue = self:getDialogueFromData(self.next_wave.dialogue)
     elseif self.current_phase_turn <= #self.phases[self.current_phase] then
         local dialogue_data = self.phases[self.current_phase][self.current_phase_turn].dialogue
@@ -248,7 +242,11 @@ function PhaseEncounter:randomTextForPhase(text, index)
 end
 
 function PhaseEncounter:setDialogueOverride(dialogue)
-    self.dialogue_override = dialogue
+    self.next_dialogue = self:getDialogueFromData(dialogue)
+end
+
+function PhaseEncounter:setWaveOverride(wave)
+    self.next_wave = self:getWaveFromData(wave)
 end
 
 function PhaseEncounter:incrementPhase(amt)
