@@ -13,6 +13,8 @@ function PhaseEncounter:init()
 
     self.next_dialogue = nil
     self.next_wave = nil
+
+    self.cutscene_id = "phase_dialogue"
 end
 
 function PhaseEncounter:onTurnStart()
@@ -29,26 +31,29 @@ function PhaseEncounter:getDialogueCutscene()
     elseif type(self.next_dialogue) == "function" then
         return self.next_dialogue
     elseif self.next_dialogue then
-        return "phase_dialogue", self.next_dialogue
+        return self.cutscene_id, self.next_dialogue
     end
 end
 
 function PhaseEncounter:getNextWaves()
-    self.next_wave.enemy.selected_wave = self.next_wave.wave
-    return {self.next_wave.wave}
+    if self.next_wave then
+        self.next_wave.enemy.selected_wave = self.next_wave.wave
+        return {self.next_wave.wave}
+    end
+    return {}
 end
 
 function PhaseEncounter:getEncounterText()
+    if not self.phases[self.current_phase] then return self.text end
     if self.current_phase_turn <= #self.phases[self.current_phase] then
         local text = self.phases[self.current_phase][self.current_phase_turn].text
         if text then
             return text
         end
-    else
-        local text = Utils.pick(self.random_text[self.current_phase] or {})
-        if text then
-            return text
-        end
+    end
+    local text = Utils.pick(self.random_text[self.current_phase] or {})
+    if text then
+        return text
     end
     return super:getEncounterText(self)
 end
@@ -117,7 +122,7 @@ end
 function PhaseEncounter:getWaveFromData(wave_data)
     if type(wave_data) == "string" then
         return {wave = wave_data, enemy = Utils.pick(Game.battle:getActiveEnemies())}
-    else
+    elseif wave_data then
         if #wave_data > 0 then
             return {wave = Utils.pick(wave_data), enemy = Utils.pick(Game.battle:getActiveEnemies())}
         else
@@ -165,15 +170,24 @@ function PhaseEncounter:getWaveFromData(wave_data)
 end
 
 function PhaseEncounter:setNextTurnData()
+    self.next_dialogue = nil
+    self.next_wave = nil
+    if not self.phases[self.current_phase] then return end
     if self.current_phase_turn <= #self.phases[self.current_phase] then
         local wave_data = self.phases[self.current_phase][self.current_phase_turn].wave
-        self.next_wave = self:getWaveFromData(wave_data)
-    else
+        if wave_data then
+            self.next_wave = self:getWaveFromData(wave_data)
+        end
+    end
+    if self.wave_override then
+        self.next_wave = self:getWaveFromData(self.wave_override)
+    end
+    if not self.next_wave then
         local wave_data = Utils.pick(self.random_waves[self.current_phase] or {})
         if not wave_data then
             wave_data = Utils.pick(self.phases[self.current_phase]).wave
         end
-        self.next_wave = self:getWaveFromData(wave_data)
+        self.next_wave = self:getWaveFromData(wave_data) or {}
     end
 
     if self.dialogue_override then
@@ -207,11 +221,13 @@ end
 
 function PhaseEncounter:randomDialogueForPhase(dialogue, index)
     index = index or #self.phases
+    if not self.phases[index] then self.phases[index] = {} end
     self.random_dialogue[index] = Utils.merge(self.random_dialogue[index] or {}, dialogue)
 end
 
 function PhaseEncounter:randomWavesForPhase(waves, index)
     index = index or #self.phases
+    if not self.phases[index] then self.phases[index] = {} end
     self.random_waves[index] = self.random_waves[index] or {}
     if type(waves) == "string" then
         table.insert(self.random_waves[index], waves)
@@ -222,6 +238,7 @@ end
 
 function PhaseEncounter:randomTextForPhase(text, index)
     index = index or #self.phases
+    if not self.phases[index] then self.phases[index] = {} end
     self.random_text[index] = self.random_text[index] or {}
     if type(text) == "string" then
         table.insert(self.random_text[index], text)
