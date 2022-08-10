@@ -1,5 +1,7 @@
 {
     "id": "phase_encounters",
-    "version": "1.2.0",
-    "engineVersion": "0.5.1"
+    "authors": [
+        "vitellary"
+    ],
+    "version": "1.0.0"
 }

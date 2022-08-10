@@ -18,6 +18,7 @@ function PhaseEncounter:init()
 end
 
 function PhaseEncounter:onTurnStart()
+    super:onTurnStart(self)
     self:incrementPhaseTurn()
 end
 
@@ -187,7 +188,10 @@ function PhaseEncounter:setNextTurnData()
         self.next_wave = self:getWaveFromData(wave_data) or {}
     end
 
-    if self.next_wave.dialogue then
+    if self.dialogue_override then
+        self.next_dialogue = self:getDialogueFromData(self.dialogue_override)
+        self.dialogue_override = nil
+    elseif self.next_wave.dialogue then
         self.next_dialogue = self:getDialogueFromData(self.next_wave.dialogue)
     elseif self.current_phase_turn <= #self.phases[self.current_phase] then
         local dialogue_data = self.phases[self.current_phase][self.current_phase_turn].dialogue
@@ -242,11 +246,21 @@ function PhaseEncounter:randomTextForPhase(text, index)
 end
 
 function PhaseEncounter:setDialogueOverride(dialogue)
-    self.next_dialogue = self:getDialogueFromData(dialogue)
+    self.dialogue_override = dialogue
 end
 
-function PhaseEncounter:setWaveOverride(wave)
-    self.next_wave = self:getWaveFromData(wave)
+function PhaseEncounter:setWaveOverride(wave, enemy)
+    if enemy then
+        if type(enemy) == "string" then
+            enemy = Game.battle:getEnemyBattler(enemy)
+        end
+    else
+        enemy = Utils.pick(Game.battle:getActiveEnemies())
+    end
+    self.next_wave = {
+        wave = wave,
+        enemy = enemy,
+    }
 end
 
 function PhaseEncounter:incrementPhase(amt)
